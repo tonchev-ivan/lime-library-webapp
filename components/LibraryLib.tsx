@@ -18,6 +18,8 @@ const LibraryLib = ({ contractAddress }: LibraryContract) => {
   const libraryContract = useLibraryContract(contractAddress);
   const [availableBooks, setAvailableBooks] = useState<string>('Unknown');
   const [bookId, setBookId] = useState<number | undefined>();
+  const [bookName, setBookName] = useState<string>('Unknown');
+  const [copies, setCopies] = useState<number | undefined>();
 
   useEffect(() => {
     resetForm();
@@ -33,12 +35,28 @@ const LibraryLib = ({ contractAddress }: LibraryContract) => {
     setBookId(input.target.value);
   }
 
+  const bookNameInput = async (input) => {
+    setBookName(input.target.value);
+  }
+
+  const copiesInput = async (input) => {
+    setCopies(input.target.value);
+  }
+
+  const createBook = async () => {
+    loading(libraryContract.addNewBook, bookName, copies);
+  }
+
+  const changeCopies = async () => {
+    loading(libraryContract.changeNumberOfBookCopies, bookId, copies);
+  }
+
   const borrowBook = async () => {
-    loading(bookId, libraryContract.borrowBook);
+    loading(libraryContract.borrowBook, bookId, null);
   }
 
   const returnBook = async () => {
-    loading(bookId, libraryContract.returnBook);
+    loading(libraryContract.returnBook, bookId, null);
   }
 
   const checkBorrowState = async () => {
@@ -60,11 +78,11 @@ const LibraryLib = ({ contractAddress }: LibraryContract) => {
     information.innerHTML = text + (await funcCallback(bookId)).toString();
   }
 
-  const loading = async (bookId, funcCallback) => {
+  const loading = async (funcCallback, param1, param2) => {
     const errorDiv = document.querySelector<HTMLElement>('.error');
     errorDiv.style.display = 'none';
     try {
-      const tx = await funcCallback(bookId);
+      const tx = param2 == null ? await funcCallback(param1) : await funcCallback(param1, param2);
       const txHash = tx.hash;
       const loadingElement = document.querySelector<HTMLElement>('.loading');
       loadingElement.style.display = 'block';
@@ -107,6 +125,34 @@ const LibraryLib = ({ contractAddress }: LibraryContract) => {
       <button onClick={checkAvailableCopies}>Check available copies</button>
       <button onClick={showAllBookBorrowers}>Show borrowers history</button>
       <p className='information'></p>
+
+      <form>
+        <p>Add book:</p>
+        <label>
+          Book name:
+          <input onChange={bookNameInput} value={bookName} type="text" name="bookName" />
+        </label>
+        <label>
+          Book copies:
+          <input onChange={copiesInput} value={copies} type="text" name="copies" />
+        </label>
+
+      </form>
+      <button onClick={createBook}>Create book</button>
+
+      <form>
+        <p>Change copies:</p>
+        <label>
+          Book id:
+          <input onChange={bookIdInput} value={bookId} type="text" name="bookId" />
+        </label>
+        <label>
+          Book copies:
+          <input onChange={copiesInput} value={copies} type="text" name="copies" />
+        </label>
+
+      </form>
+      <button onClick={changeCopies}>Change copies</button>
 
       <div className="error">
         <p className="error-message"></p>
